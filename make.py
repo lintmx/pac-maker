@@ -32,8 +32,7 @@ def insert_white(site):
     with open('white', 'r') as white_file:
         for line in white_file:
             white_list.append(line)
-            print(line)
-    white_list.append('v2ex.com\n')
+    
     if site not in white_list:
         white_list.append(site)
 
@@ -42,6 +41,22 @@ def insert_white(site):
                 white_file.write(line)
     else:
         print('This site already exists.')
+
+def insert_black(site):
+    black_list = []
+
+    with open('black', 'r') as black_file:
+        for line in black_file:
+            black_list.append(line)
+
+    if site not in black_list:
+        black_list.append(site)
+
+        with open('black', 'w') as black_file:
+            for line in black_list:
+                black_file.write(line)
+    else:
+        print('This site already existe.')
 
 def read_white_file():
     str_white = "{"
@@ -174,6 +189,7 @@ def generate_pac_file():
 def main():
     parser = argparse.ArgumentParser(description='A tool to quickly generate proxy auto-config files.')
     parser.add_argument('-w', '--white', help='Add a site to white list.')
+    parser.add_argument('-b', '--black', help='Add a site to black list.')
     parser.add_argument('-u', '--update', help='Update ip list from apnic.', required=False, action='store_true')
     
     args = parser.parse_args()
@@ -183,6 +199,10 @@ def main():
     
     if args.white is not None:
         insert_white(args.white)
+
+    if args.black is Not None:
+        insert_black(args.black)
+
     generate_pac_file()
 
 if __name__ == '__main__':
