@@ -200,7 +200,7 @@ def main():
     if args.white is not None:
         insert_white(args.white)
 
-    if args.black is Not None:
+    if args.black is not None:
         insert_black(args.black)
 
     generate_pac_file()
