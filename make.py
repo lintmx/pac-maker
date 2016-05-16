@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+#coding:utf-8
+
+# pac-maker
+#
+# Author: lintmx
+# Version: 1.1.0
 
 import os
 import argparse
@@ -19,6 +25,23 @@ class IpList(list):
                 break
         else:
             self.append(ip_int + '.' + ip_count)
+
+def insert_white(site):
+    white_list = []
+
+    with open('white', 'r') as white_file:
+        for line in white_file:
+            white_list.append(line)
+            print(line)
+    white_list.append('v2ex.com\n')
+    if site not in white_list:
+        white_list.append(site)
+
+        with open('white', 'w') as white_file:
+            for line in white_list:
+                white_file.write(line)
+    else:
+        print('This site already exists.')
 
 def read_white_file():
     str_white = "{"
@@ -150,13 +173,16 @@ def generate_pac_file():
 
 def main():
     parser = argparse.ArgumentParser(description='A tool to quickly generate proxy auto-config files.')
+    parser.add_argument('-w', '--white', help='Add a site to white list.')
     parser.add_argument('-u', '--update', help='Update ip list from apnic.', required=False, action='store_true')
     
     args = parser.parse_args()
     
     if args.update == True:
         update_ip_list()
-
+    
+    if args.white is not None:
+        insert_white(args.white)
     generate_pac_file()
 
 if __name__ == '__main__':
