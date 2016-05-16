@@ -33,8 +33,8 @@ def insert_white(site):
         for line in white_file:
             white_list.append(line)
     
-    if site not in white_list:
-        white_list.append(site)
+    if str(site + '\n') not in white_list:
+        white_list.append(site + '\n')
 
         with open('white', 'w') as white_file:
             for line in white_list:
@@ -49,8 +49,8 @@ def insert_black(site):
         for line in black_file:
             black_list.append(line)
 
-    if site not in black_list:
-        black_list.append(site)
+    if str(site + '\n') not in black_list:
+        black_list.append(site + '\n')
 
         with open('black', 'w') as black_file:
             for line in black_list:
