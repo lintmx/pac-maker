@@ -1,12 +1,8 @@
 function FindProxyForURL(url, host) {
     var direct = 'DIRECT';
     var proxy = '__PROXY_ADDRESS__';
-    
-    var specialList = __SPECIALLIST__;
-    var whiteList = __WHITELIST__;
-    var blackList = __BLACKLIST__;
-    var chinaIP = __CHINAIP__;
-    
+
+__INSERT_CONTAINER__
     function toInt(ipString) {
         var ipArray = ipString.split('.');
         return ipArray[0] * 65536 + ipArray[1] * 256 + ipArray[2] * 1;
@@ -35,13 +31,7 @@ function FindProxyForURL(url, host) {
         return direct;
     }
     
-    if (specialList.hasOwnProperty(host)) {
-        if (specialList[host] == 1) {
-            return direct;
-        } else {
-            return proxy;
-        }
-    }
+__SPECIAL_RULE__
    
     var hostArray = host.split('.');
     var currHost = hostArray[hostArray.length - 1];
