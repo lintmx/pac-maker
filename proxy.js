@@ -1,56 +1,1 @@
-function FindProxyForURL(url, host) {
-    var direct = 'DIRECT';
-    var proxy = '__PROXY_ADDRESS__';
-
-__INSERT_CONTAINER__
-    function toInt(ipString) {
-        var ipArray = ipString.split('.');
-        return ipArray[0] * 65536 + ipArray[1] * 256 + ipArray[2] * 1;
-    }
-    
-    function binarySearch(ip, list) {
-        var left = 0;
-        var right = list.length - 1;
-        
-        do {
-            var mid = Math.floor((left + right) / 2);
-            
-            if (Math.abs(ip - list[mid][0]) <= list[mid][1]) {
-                return true;
-            } else if (ip > list[mid][0]) {
-                left = mid;
-            } else {
-                right = mid;
-            }
-        } while (left < right - 1);
-        
-        return false;
-    }
-    
-    if (isPlainHostName(host)) {
-        return direct;
-    }
-    
-__SPECIAL_RULE__
-   
-    var hostArray = host.split('.');
-    var currHost = hostArray[hostArray.length - 1];
-
-    for (var i = hostArray.length - 2;i > -1;i--) {
-        if (whiteList.hasOwnProperty(currHost)) {
-            return direct;
-        }
-        if (blackList.hasOwnProperty(currHost)) {
-            return proxy;
-        }
-        currHost = hostArray[i] + '.' + currHost;
-    } 
-    
-    var ipString = toInt(dnsResolve(host));
-    
-    if (binarySearch(ipString, chinaIP)) {
-        return direct;
-    }
-    
-    return proxy;
-}
+function FindProxyForURL(url, host) {    var direct = 'DIRECT';    var proxy = '__PROXY_ADDRESS__';    var specialList = {__SPACIAL_LIST__    };    var blackList = {__BLACK_LIST__    };    var whiteList = {__WHITE_LIST__    };    var bypassIp = [__BYPASS_IP__    ];    function toDec(strIp) {        var ipArray = strIp.split('.');        return ipArray[0] * 65536 + ipArray[1] * 256 + ipArray[2] * 1;    }    function binarySearch(decIp, list) {        var left = 0;        var right = list.length - 1;        do {            var mid = Math.floor((left + right) / 2),                diff = decIp - list[mid][0];            if (diff >= 0 && diff <= list[mid][1]) {                return true;            } else if (decIp > list[mid][0]) {                left = mid + 1;            } else {                right = mid;            }        } while (left <= right - 1);        return false;    }    if (isPlainHostName(host)||        host === '127.0.0.1'||        host === 'localhost') {        return direct;    }    if (specialList.hasOwnProperty(host)) {        if (specialList[host] == 1) {            return direct;        } else {            return proxy;        }    }    var pos = host.lastIndexOf('.') + 1;    do {        hostStr = host.substring(pos);        if (whiteList.hasOwnProperty(hostStr)) {            return direct;        }        if (blackList.hasOwnProperty(hostStr)) {            return proxy;        }        pos = host.lastIndexOf('.', pos - 2) + 1;    } while (hostStr != host);    var decIp = dnsResolve(host);    if (!decIp) {        return proxy;    } else {        decIp = toDec(decIp);    }    if (binarySearch(decIp, bypassIp)) {        return direct;    }    return proxy;}

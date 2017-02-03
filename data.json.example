@@ -1,0 +1,38 @@
+{
+  "special_list": {
+    "dl.google.com": 0,
+    "dl.google.cn": 0
+  },
+  "white_list": [
+    "v2ex.com",
+    "v2ex.co"
+  ],
+  "black_list": [
+    "google.com",
+    "google.co.jp"
+  ],
+  "local_ip": [
+    [
+      "10.0.0.0",
+      16777216
+    ],
+    [
+      "172.16.0.0",
+      1048576
+    ],
+    [
+      "192.168.0.0",
+      65536
+    ]
+  ],
+  "ip_list": [
+    [
+      65537,
+      3
+    ],
+    [
+      65544,
+      8
+    ]
+  ]
+}

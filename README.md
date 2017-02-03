@@ -2,7 +2,7 @@
 
 A Proxy Auto-config file generator.
 
-# Usage
+## Usage
 
 ```
 $ ./make.py -h
@@ -16,6 +16,10 @@ optional arguments:
 
 ```
 
-# License
+## Thanks
+
+[Flora_Pac](https://github.com/Leask/Flora_Pac)
+
+## License
 
 MIT
