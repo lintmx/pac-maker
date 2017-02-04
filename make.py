@@ -151,6 +151,54 @@ def update_china_list():
     update_data_json("ip_list", ipv4_list)
 
 
+def modify_special_rule(address, is_proxy, delete):
+    special_list = read_special_list()
+
+    if delete:
+        # TODO: del a special rule in list.
+        pass
+    else:
+        if special_list.count((address, 1)) + special_list.count((address, 0)) > 0:
+            print('The address: ' + address + ' already exists.')
+        else:
+            special_list.append((address, (0 if (is_proxy == 'proxy') else 1)))
+            special_list.sort()
+            update_data_json("special_list", special_list)
+            print('success!')
+
+
+def modify_white_rule(rule, delete):
+    white_list = read_white_list()
+
+    if delete:
+        # TODO: del a white rule in list.
+        pass
+    else:
+        if white_list.count(rule) > 0:
+            print('The address: ' + rule + ' already exists.')
+        else:
+            white_list.append(rule)
+            white_list.sort()
+            update_data_json('white_list', white_list)
+            print('success!')
+
+
+def modify_black_rule(rule, delete):
+    black_list = read_black_list()
+
+    if delete:
+        # TODO: del a white rule in list.
+        pass
+    else:
+        if black_list.count(rule) > 0:
+            print('The address: ' + rule + ' already exists.')
+        else:
+            black_list.append(rule)
+            black_list.sort()
+            update_data_json('black_list', black_list)
+            print('success!')
+
+
 def generate_special_list(compression):
     special_list = read_special_list()
     new_list = ""
@@ -242,19 +290,40 @@ def generate_pac_file(compression, path):
 def main():
     parser = argparse.ArgumentParser(description='A tool to quickly generate proxy auto-config files.')
 
+    parser.add_argument('-s', '--special', metavar='ADDRESS',
+                        help='Add a rule to special list.')
+    parser.add_argument('--method', metavar='METHOD', choices=('proxy', 'direct'), default='direct',
+                        help='Set special rule method.')
+    parser.add_argument('-w', '--white', metavar='ADDRESS',
+                        help='Add a rule to white list.')
+    parser.add_argument('-b', '--black', metavar='ADDRESS',
+                        help='Add a rule to black list.')
+    parser.add_argument('--delete', required=False, action='store_true',
+                        help='Delete rule action.')
     parser.add_argument('-u', '--update', required=False, action='store_true',
                         help='Update China ip list.')
     parser.add_argument('-c', '--compression', required=False, action='store_true',
                         help='Compress the pac file.')
-    parser.add_argument('-o', '--out', metavar='path',
+    parser.add_argument('-o', '--out', metavar='PATH',
                         help='Write output to file')
 
     parser_args = parser.parse_args()
 
+    print(parser_args)
     if parser_args.update:
         update_china_list()
 
+    if parser_args.special is not None:
+        modify_special_rule(parser_args.special, parser_args.method, parser_args.delete)
+
+    if parser_args.white is not None:
+        modify_white_rule(parser_args.white, parser_args.delete)
+
+    if parser_args.black is not None:
+        modify_black_rule(parser_args.black, parser_args.delete)
+
     generate_pac_file(parser_args.compression, parser_args.out)
+
 
 if __name__ == '__main__':
     main()
