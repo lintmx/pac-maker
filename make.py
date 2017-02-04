@@ -155,8 +155,14 @@ def modify_special_rule(address, is_proxy, delete):
     special_list = read_special_list()
 
     if delete:
-        # TODO: del a special rule in list.
-        pass
+        if special_list.count((address, 1)) > 0:
+            special_list.remove((address, 1))
+            update_data_json("special_list", special_list)
+        elif special_list.count((address, 0)) > 0:
+            special_list.remove((address, 0))
+            update_data_json("special_list", special_list)
+        else:
+            print('The address: ' + address + ' not found.')
     else:
         if special_list.count((address, 1)) + special_list.count((address, 0)) > 0:
             print('The address: ' + address + ' already exists.')
@@ -164,15 +170,17 @@ def modify_special_rule(address, is_proxy, delete):
             special_list.append((address, (0 if (is_proxy == 'proxy') else 1)))
             special_list.sort()
             update_data_json("special_list", special_list)
-            print('success!')
 
 
 def modify_white_rule(rule, delete):
     white_list = read_white_list()
 
     if delete:
-        # TODO: del a white rule in list.
-        pass
+        if white_list.count(rule):
+            white_list.remove(rule)
+            update_data_json('white_list', white_list)
+        else:
+            print('The address: ' + rule + ' not found.')
     else:
         if white_list.count(rule) > 0:
             print('The address: ' + rule + ' already exists.')
@@ -180,15 +188,17 @@ def modify_white_rule(rule, delete):
             white_list.append(rule)
             white_list.sort()
             update_data_json('white_list', white_list)
-            print('success!')
 
 
 def modify_black_rule(rule, delete):
     black_list = read_black_list()
 
     if delete:
-        # TODO: del a white rule in list.
-        pass
+        if black_list.count(rule) > 0:
+            black_list.remove(rule)
+            update_data_json('black_list', black_list)
+        else:
+            print('The address: ' + rule + ' not found.')
     else:
         if black_list.count(rule) > 0:
             print('The address: ' + rule + ' already exists.')
@@ -196,7 +206,6 @@ def modify_black_rule(rule, delete):
             black_list.append(rule)
             black_list.sort()
             update_data_json('black_list', black_list)
-            print('success!')
 
 
 def generate_special_list(compression):
@@ -309,7 +318,6 @@ def main():
 
     parser_args = parser.parse_args()
 
-    print(parser_args)
     if parser_args.update:
         update_china_list()
 
