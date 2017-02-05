@@ -1,15 +1,22 @@
 {
-  "special_list": {
-    "dl.google.com": 0,
-    "dl.google.cn": 0
-  },
+  "special_list": [
+    [
+      "dl.google.com",
+      1
+    ]
+  ],
   "white_list": [
-    "v2ex.com",
-    "v2ex.co"
+    "acgvideo.com",
+    "bilibili.com",
+    "hdslb.com",
+    "v2ex.co",
+    "v2ex.com"
   ],
   "black_list": [
+    "google.co.jp",
     "google.com",
-    "google.co.jp"
+    "google.com.hk",
+    "nicovideo.jp"
   ],
   "local_ip": [
     [
@@ -25,7 +32,7 @@
       65536
     ]
   ],
-  "ip_list": [
+  "bypass_list": [
     [
       65537,
       3
