@@ -1,6 +1,13 @@
 {
+  "special_list": 0,
+  "white_list": 0,
+  "black_list": 0,
+  "bypass_ip": 1,
+  "bypass_local": 0,
+
   "proxy_address": {
-    "127.0.0.1": [1080, "PROXY"],
-    "127.0.0.1": [1080, "SOCKS5"]
+    "ss": ["127.0.0.1",1080,"SOCKS5"],
+    "http": ["127.0.0.1",1080,"PROXY"],
+    "remote": ["remote.abc.com",1080,"PROXY"]
   }
 }

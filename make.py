@@ -14,6 +14,11 @@ from urllib import request
 
 
 class Config:
+    special_bypass = True
+    white_bypass = True
+    black_bypass = True
+    ip_bypass = True
+    local_bypass = True
     proxy_address = ''
 
 
@@ -80,6 +85,12 @@ def read_config():
         json_data = json.load(config_file)
         proxy_address = ''
 
+        config.special_bypass = True if (json_data['special_list'] == 1) else False
+        config.white_bypass = True if (json_data['white_list'] == 1) else False
+        config.black_bypass = True if (json_data['black_list'] == 1) else False
+        config.ip_bypass = True if (json_data['bypass_ip']) else False
+        config.local_bypass = True if (json_data['bypass_local']) else False
+
         for data in json_data["proxy_address"]:
             proxy_address += ('%s %s:%s; ' % (json_data["proxy_address"][data][2],
                                               json_data["proxy_address"][data][0],
@@ -88,6 +99,59 @@ def read_config():
             config.proxy_address = proxy_address[:-2]
 
     return config
+
+
+def read_proxy_file(config, compression):
+    proxy_file = ''
+    if compression:
+        template_file = 'proxy.min'
+    else:
+        template_file = 'proxy'
+
+    with open('data.json', 'r') as data_file:
+        json_data = json.load(data_file)
+
+        if compression and (config.white_bypass or config.black_bypass):
+            proxy_file += json_data[template_file]['split_function']
+
+        proxy_file += json_data[template_file]["head"]
+
+        if config.special_bypass:
+            proxy_file += json_data[template_file]['special_list']
+
+        if config.black_bypass:
+            proxy_file += json_data[template_file]['black_list']
+
+        if config.white_bypass:
+            proxy_file += json_data[template_file]['white_list']
+
+        if config.ip_bypass:
+            proxy_file += json_data[template_file]['bypass_list']
+            proxy_file += json_data[template_file]['ip_bypass_function']
+
+        if config.local_bypass:
+            proxy_file += json_data[template_file]['local_bypass']
+
+        if config.special_bypass:
+            proxy_file += json_data[template_file]['special_bypass']
+
+        if config.white_bypass or config.black_bypass:
+            proxy_file += json_data[template_file]['wb_bypass_header']
+
+            if config.white_bypass:
+                proxy_file += json_data[template_file]['white_bypass']
+
+            if config.black_bypass:
+                proxy_file += json_data[template_file]['black_bypass']
+
+            proxy_file += json_data[template_file]['wb_bypass_footer']
+
+        if config.ip_bypass:
+            proxy_file += json_data[template_file]['ip_bypass']
+
+        proxy_file += json_data[template_file]['foot']
+
+    return proxy_file
 
 
 def update_data_json(list_name, new_list):
@@ -273,16 +337,9 @@ def generate_ip_list(compression):
 
 
 def generate_pac_file(compression, path):
-    if compression:
-        read_file = 'proxy.min.js'
-    else:
-        read_file = 'proxy.js'
-
-    with open(read_file) as file:
-        pac_file = file.read()
-
     config = read_config()
 
+    pac_file = read_proxy_file(config, compression)
     pac_file = pac_file.replace('__PROXY_ADDRESS__', config.proxy_address)
     pac_file = pac_file.replace('__SPACIAL_LIST__', generate_special_list(compression))
     pac_file = pac_file.replace('__BLACK_LIST__', generate_black_list(compression))
