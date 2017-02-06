@@ -1,3 +1,10 @@
 # PyCharm files
 
+# idea config file
 .idea/
+
+# config file
+config.json
+
+# data file
+data.json

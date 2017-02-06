@@ -1,0 +1,78 @@
+{
+  "special_list": [
+    [
+      "dl.google.com",
+      1
+    ]
+  ],
+  "white_list": [
+    "acgvideo.com",
+    "bilibili.com",
+    "hdslb.com",
+    "v2ex.co",
+    "v2ex.com"
+  ],
+  "black_list": [
+    "google.co.jp",
+    "google.com",
+    "google.com.hk",
+    "nicovideo.jp"
+  ],
+  "local_ip": [
+    [
+      "10.0.0.0",
+      16777216
+    ],
+    [
+      "172.16.0.0",
+      1048576
+    ],
+    [
+      "192.168.0.0",
+      65536
+    ]
+  ],
+  "bypass_list": [
+    [
+      65537,
+      3
+    ],
+    [
+      65544,
+      8
+    ]
+  ],
+    "proxy": {
+    "head": "function FindProxyForURL(url, host) {\n\tvar direct = 'DIRECT';\n\tvar proxy = '__PROXY_ADDRESS__';\n\n",
+    "special_list": "\tvar specialList = {\n__SPACIAL_LIST__\n\t};\n\n",
+    "black_list": "\tvar blackList = {\n__BLACK_LIST__\n\t};\n\n",
+    "white_list": "\tvar whiteList = {\n__WHITE_LIST__\n\t};\n\n",
+    "bypass_list": "\tvar bypassIp = [\n__BYPASS_IP__\n\t];\n\n",
+    "ip_bypass_function": "\tfunction toDec(strIp) {\n\t\tvar ipArray = strIp.split('.');\n\t\treturn ipArray[0] * 65536 + ipArray[1] * 256 + ipArray[2] * 1;\n\t}\n\n\tfunction binarySearch(decIp, list) {\n\t\tvar left = 0;\n\t\tvar right = list.length - 1;\n\n\t\tdo {\n\t\t\tvar mid = Math.floor((left + right) / 2),\n\t\t\t\tdiff = decIp - list[mid][0];\n\n\t\t\tif (diff >= 0 && diff <= list[mid][1]) {\n\t\t\t\treturn true;\n\t\t\t} else if (decIp > list[mid][0]) {\n\t\t\t\tleft = mid + 1;\n\t\t\t} else {\n\t\t\t\tright = mid;\n\t\t\t}\n\t\t} while (left <= right - 1);\n\n\t\treturn false;\n\t}\n\n",
+    "local_bypass": "\tif (isPlainHostName(host)||\n\t\thost === '127.0.0.1'||\n\t\thost === 'localhost') {\n\t\treturn direct;\n\t}\n\n",
+    "special_bypass": "\tif (specialList.hasOwnProperty(host)) {\n\t\tif (specialList[host] == 1) {\n\t\t\treturn direct;\n\t\t} else {\n\t\t\treturn proxy;\n\t\t}\n\t}\n\n",
+    "wb_bypass_header": "\tvar pos = host.lastIndexOf('.') + 1;\n\n\tdo {\n\t\thostStr = host.substring(pos);\n\n",
+    "white_bypass": "\t\tif (whiteList.hasOwnProperty(hostStr)) {\n\t\t\treturn direct;\n\t\t}\n\n",
+    "black_bypass": "\t\tif (blackList.hasOwnProperty(hostStr)) {\n\t\t\treturn proxy;\n\t\t}\n\n",
+    "wb_bypass_footer": "\t\tpos = host.lastIndexOf('.', pos - 2) + 1;\n\t} while (hostStr != host);\n\n",
+    "ip_bypass": "\tvar decIp = dnsResolve(host);\n\n\tif (!decIp) {\n\t\treturn proxy;\n\t} else {\n\t\tdecIp = toDec(decIp);\n\t}\n\n\tif (binarySearch(decIp, bypassIp)) {\n\t\treturn direct;\n\t}\n\n",
+    "foot": "\treturn proxy;\n}"
+  },
+  "proxy.min": {
+    "split_function": "function r(r){for(var t={};i=r.pop();)t[i]=1;return t}",
+    "head": "function FindProxyForURL(u,h){var v='DIRECT';var p='__PROXY_ADDRESS__';",
+    "special_list": "var s={__SPACIAL_LIST__};",
+    "black_list": "var b=r('__BLACK_LIST__'.split('|'));",
+    "white_list": "var w=r('__WHITE_LIST__'.split('|'));",
+    "bypass_list": "var i=[__BYPASS_IP__];",
+    "ip_bypass_function": "function a(v){var f=v.split('.');return f[0]*65536+f[1]*256+f[2]*1;}function c(x,y){var l=0;var r=y.length-1;do{var m=Math.floor((l+r)/2),d=x-y[m][0];if(d>=0&&d<=y[m][1]){return true;}else if(x>y[m][0]){l=m+1;}else{r=m;}}while(l<=r-1);return false;}",
+    "local_bypass": "if (isPlainHostName(h)||h==='127.0.0.1'||h==='localhost'){return v;}",
+    "special_bypass": "if(s.hasOwnProperty(h)){if(s[h]==1){return v;}else{return p;}}",
+    "wb_bypass_header": "var o=h.lastIndexOf('.')+1;do{var k=h.substring(o);",
+    "white_bypass": "if(w.hasOwnProperty(k)){return v;}",
+    "black_bypass": "if(b.hasOwnProperty(k)){return p;}",
+    "wb_bypass_footer": "o=h.lastIndexOf('.',o-2)+1;}while(k!=h);",
+    "ip_bypass": "var z=dnsResolve(h);if(!z){return p;}else{z=a(z);}if(c(z, i)){return v;}",
+    "foot": "return p;}"
+  }
+}

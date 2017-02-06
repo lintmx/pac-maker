@@ -1,268 +1,393 @@
 #!/usr/bin/env python3
-# coding:utf-8
+# -*- conding: utf-8 -*-
 
 # pac-maker
 #
 # Author: lintmx
-# Version: 1.1.0
+# Version: 2.0.0
 
 import argparse
+import json
+import operator
 import os
-
 from urllib import request
 
-proxy = 'SOCKS5 127.0.0.1:1080'
-special_rule = '''
-    if (specialList.hasOwnProperty(host)) {
-        if (specialList[host] == 1) {
-            return direct;
-        } else {
-            return proxy;
-        }
-    }'''
 
-class IpList(list):
-    def insert_ip(self, ip, mask):
-        ip_int = to_int(ip)
-        ip_count = str((2 ** (32 - mask)) // 256)
+class Config:
+    special_bypass = True
+    white_bypass = True
+    black_bypass = True
+    ip_bypass = True
+    local_bypass = True
+    proxy_address = ''
 
-        for i in range(len(self)):
-            if float(self[i]) > float(ip_int):
-                self.insert(i, ip_int + '.' + ip_count)
 
-                break
-        else:
-            self.append(ip_int + '.' + ip_count)
+def read_special_list():
+    special_list = {}
 
-def insert_special(site):
-    special_list = []
+    with open('data.json', 'r') as data_file:
+        json_data = json.load(data_file)
 
-    with open('special', 'r') as special_file:
-        for line in special_file:
-            special_list.append(line)
+        for data in json_data["special_list"]:
+            special_list[data[0]] = data[1]
 
-    if str(site + '\n') not in special_list:
-        special_list.append(site + '\n')
+        special_list = sorted(special_list.items(), key=operator.itemgetter(0))
 
-        with open('special', 'w') as special_file:
-            for line in special_list:
-                special_file.write(line)
-    else:
-        print('This site already exists.')
+    return special_list
 
-def insert_white(site):
+
+def read_white_list():
     white_list = []
 
-    with open('white', 'r') as white_file:
-        for line in white_file:
-            white_list.append(line)
+    with open('data.json', 'r') as data_file:
+        json_data = json.load(data_file)
 
-    if str(site + '\n') not in white_list:
-        white_list.append(site + '\n')
+        for data in json_data["white_list"]:
+            white_list.append(data)
 
-        with open('white', 'w') as white_file:
-            for line in white_list:
-                white_file.write(line)
-    else:
-        print('This site already exists.')
+        white_list.sort()
+
+    return white_list
 
 
-def insert_black(site):
+def read_black_list():
     black_list = []
 
-    with open('black', 'r') as black_file:
-        for line in black_file:
-            black_list.append(line)
+    with open('data.json', 'r') as data_file:
+        json_data = json.load(data_file)
 
-    if str(site + '\n') not in black_list:
-        black_list.append(site + '\n')
+        for data in json_data["black_list"]:
+            black_list.append(data)
 
-        with open('black', 'w') as black_file:
-            for line in black_list:
-                black_file.write(line)
+        black_list.sort()
+
+    return black_list
+
+
+def read_bypass_list():
+    ip_list = {}
+
+    with open('data.json', 'r') as data_file:
+        json_data = json.load(data_file)
+
+        for data in json_data["bypass_list"]:
+            ip_list[data[0]] = data[1]
+
+        ip_list = sorted(ip_list.items(), key=operator.itemgetter(0))
+
+    return ip_list
+
+
+def read_config():
+    config = Config()
+
+    with open('config.json', 'r') as config_file:
+        json_data = json.load(config_file)
+        proxy_address = ''
+
+        config.special_bypass = True if (json_data['special_list'] == 1) else False
+        config.white_bypass = True if (json_data['white_list'] == 1) else False
+        config.black_bypass = True if (json_data['black_list'] == 1) else False
+        config.ip_bypass = True if (json_data['bypass_ip']) else False
+        config.local_bypass = True if (json_data['bypass_local']) else False
+
+        for data in json_data["proxy_address"]:
+            proxy_address += ('%s %s:%s; ' % (json_data["proxy_address"][data][2],
+                                              json_data["proxy_address"][data][0],
+                                              json_data["proxy_address"][data][1]))
+        else:
+            config.proxy_address = proxy_address[:-2]
+
+    return config
+
+
+def read_proxy_file(config, compression):
+    proxy_file = ''
+    if compression:
+        template_file = 'proxy.min'
     else:
-        print('This site already existe.')
+        template_file = 'proxy'
+
+    with open('data.json', 'r') as data_file:
+        json_data = json.load(data_file)
+
+        if compression and (config.white_bypass or config.black_bypass):
+            proxy_file += json_data[template_file]['split_function']
+
+        proxy_file += json_data[template_file]["head"]
+
+        if config.special_bypass:
+            proxy_file += json_data[template_file]['special_list']
+
+        if config.black_bypass:
+            proxy_file += json_data[template_file]['black_list']
+
+        if config.white_bypass:
+            proxy_file += json_data[template_file]['white_list']
+
+        if config.ip_bypass:
+            proxy_file += json_data[template_file]['bypass_list']
+            proxy_file += json_data[template_file]['ip_bypass_function']
+
+        if config.local_bypass:
+            proxy_file += json_data[template_file]['local_bypass']
+
+        if config.special_bypass:
+            proxy_file += json_data[template_file]['special_bypass']
+
+        if config.white_bypass or config.black_bypass:
+            proxy_file += json_data[template_file]['wb_bypass_header']
+
+            if config.white_bypass:
+                proxy_file += json_data[template_file]['white_bypass']
+
+            if config.black_bypass:
+                proxy_file += json_data[template_file]['black_bypass']
+
+            proxy_file += json_data[template_file]['wb_bypass_footer']
+
+        if config.ip_bypass:
+            proxy_file += json_data[template_file]['ip_bypass']
+
+        proxy_file += json_data[template_file]['foot']
+
+    return proxy_file
 
 
-def read_white_file():
-    str_white = "    var whiteList = {"
+def update_data_json(list_name, new_list):
+    with open('data.json', 'r') as data_file:
+        json_data = json.load(data_file)
 
-    with open('white', 'r') as white_file:
-        for line in white_file:
-            if (line == '\n' or line[:1] == '#'):
-                continue
+        if list_name == 'ip_list':
+            json_data["bypass_list"] = new_list
+        if list_name == 'special_list':
+            json_data["special_list"] = new_list
+        if list_name == 'white_list':
+            json_data["white_list"] = new_list
+        if list_name == 'black_list':
+            json_data["black_list"] = new_list
 
-            str_white += "\n        '" + line.strip('\n') + "' : 1,"
-
-    str_white = str_white[:-1]
-    str_white += "\n    };\n"
-
-    return str_white
-
-
-def read_black_file():
-    str_black = "    var blackList = {"
-
-    with open('black', 'r') as black_file:
-        for line in black_file:
-            if (line == '\n' or line[:1] == '#'):
-                continue
-
-            str_black += "\n        '" + line.strip('\n') + "' : 1,"
-
-    str_black = str_black[:-1]
-    str_black += "\n    };\n"
-
-    return str_black
+    with open('data.json', 'w') as data_file:
+        json.dump(json_data, data_file, indent=2)
 
 
-def read_special_file():
-    str_special = "    var specialList = {"
+def convert_dec(ipv4_address):
+    ip_split = ipv4_address.split('.')
 
-    with open('special', 'r') as special_file:
-        for line in special_file:
-            if (line == '\n' or line[:1] == '#'):
-                continue
+    convert_result = int(ip_split[0]) * 65536 + int(ip_split[1]) * 256 + int(ip_split[2]) * 1
 
-            line = line.split('@')
-            str_special += "\n        '" + line[0] + "' : " + line[1].strip('\n') + ","
-
-    str_special = str_special[:-1]
-    str_special += "\n    };\n"
-
-    return str_special
+    return convert_result
 
 
-def read_ip_file():
-    str_iplist = "    var chinaIP = ["
-
-    with open('iplist', 'r') as iplist_file:
-        for line in iplist_file:
-            line = line.split('.')
-            str_iplist += "\n        [" + line[0] + ", " + line[1].strip('\n') + "],"
-
-    str_iplist = str_iplist[:-1]
-    str_iplist += "\n    ];\n"
-
-    return str_iplist
-
-
-def to_int(ipv4):
-    ipv4 = ipv4.split('.')
-    ipv4_int = str(int(ipv4[0]) * 65536 + int(ipv4[1]) * 256 + int(ipv4[2]) * 1)
-
-    return ipv4_int
-
-
-def update_ip_list():
+def update_china_list():
     apnic_url = 'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest'
-    ip_list = IpList()
-
+    ipv4_list = {}
     request.urlretrieve(apnic_url, 'apnic')
 
     with open('apnic', 'r') as apnic_file:
-        for line in apnic_file:
-            if (line[:1] == '#' or line == '\n'):
+        for each_line in apnic_file:
+            if each_line[:1] == '#' or each_line == '\n':
                 continue
+            each_line = each_line.split('|')
 
-            line = line.split('|')
+            if each_line[1] == 'CN' and each_line[2] == 'ipv4':
+                ipv4_list[convert_dec(each_line[3])] = int(each_line[4]) // 256
 
-            if line[1] == 'CN' and line[2] == 'ipv4':
-                ip_list.append(to_int(line[3]) + '.' + str(int(line[4]) // 256))
+    os.remove(os.path.join(os.getcwd(), "apnic"))
 
-    ip_list.insert_ip('0.0.0.0', 8)
-    ip_list.insert_ip('10.0.0.0', 8)
-    ip_list.insert_ip('127.0.0.0', 8)
-    ip_list.insert_ip('169.254.0.0', 16)
-    ip_list.insert_ip('172.16.0.0', 12)
-    ip_list.insert_ip('192.0.0.0', 24)
-    ip_list.insert_ip('192.0.2.0', 24)
-    ip_list.insert_ip('192.88.99.0', 24)
-    ip_list.insert_ip('192.168.0.0', 16)
-    ip_list.insert_ip('198.18.0.0', 15)
-    ip_list.insert_ip('198.51.100.0', 24)
-    ip_list.insert_ip('203.0.113.0', 24)
-    ip_list.insert_ip('224.0.0.0', 4)
-    ip_list.insert_ip('240.0.0.0', 4)
+    with open('data.json', 'r') as data_file:
+        json_data = json.load(data_file)
 
-    new_list = IpList()
-    i = 0
+        for data in json_data["local_ip"]:
+            ipv4_list[convert_dec(data[0])] = int(data[1]) // 256
 
-    while (i < len(ip_list) - 1):
-        start_ip = int(ip_list[i].split('.')[0])
-        ip_count = int(ip_list[i].split('.')[1])
-        k = 0
+    ipv4_list = sorted(ipv4_list.items(), key=operator.itemgetter(0))
 
-        while ((i + k + 1) < len(ip_list) and int(ip_list[i + k].split('.')[0]) + int(ip_list[i + k].split('.')[1]) ==
-            int(ip_list[i + k + 1].split('.')[0])):
-            ip_count += int(ip_list[i + k + 1].split('.')[1])
-            k += 1
+    index = 0
+    while index < len(ipv4_list) - 1:
+        if ipv4_list[index][0] + ipv4_list[index][1] == ipv4_list[index + 1][0]:
+            ipv4_list[index] = (ipv4_list[index][0], ipv4_list[index][1] + ipv4_list[index + 1][1])
+            del ipv4_list[index + 1]
+            index = 0
+        else:
+            index += 1
 
-        new_list.append(str(start_ip) + '.' + str(ip_count))
-        i += k + 1
-
-    with open('iplist', 'w') as ip_file:
-        for line in new_list:
-            ip_file.write(line + '\n')
+    update_data_json("ip_list", ipv4_list)
 
 
-def generate_pac_file():
-    with open('proxy.js', 'r') as base_pac:
-        pac = base_pac.read()
+def modify_special_rule(address, is_proxy, delete):
+    special_list = read_special_list()
 
-    # Replace rule list
-    rule = ""
-
-    if (os.path.isfile(os.getcwd() + "/special")):
-        rule += read_special_file()
-        pac = pac.replace('__SPECIAL_RULE__',special_rule)
+    if delete:
+        if special_list.count((address, 1)) > 0:
+            special_list.remove((address, 1))
+            update_data_json("special_list", special_list)
+        elif special_list.count((address, 0)) > 0:
+            special_list.remove((address, 0))
+            update_data_json("special_list", special_list)
+        else:
+            print('The address: ' + address + ' not found.')
     else:
-        pac = pac.replace('__SPECIAL_RULE__', '')
+        if special_list.count((address, 1)) + special_list.count((address, 0)) > 0:
+            print('The address: ' + address + ' already exists.')
+        else:
+            special_list.append((address, (0 if (is_proxy == 'proxy') else 1)))
+            special_list.sort()
+            update_data_json("special_list", special_list)
 
-    if (os.path.isfile(os.getcwd() + "/black")):
-        rule += read_black_file()
 
-    if (os.path.isfile(os.getcwd() + "/white")):
-        rule += read_white_file()
+def modify_white_rule(rule, delete):
+    white_list = read_white_list()
 
-    if (os.path.isfile(os.getcwd() + "/iplist")):
-        rule += read_ip_file()
+    if delete:
+        if white_list.count(rule):
+            white_list.remove(rule)
+            update_data_json('white_list', white_list)
+        else:
+            print('The address: ' + rule + ' not found.')
+    else:
+        if white_list.count(rule) > 0:
+            print('The address: ' + rule + ' already exists.')
+        else:
+            white_list.append(rule)
+            white_list.sort()
+            update_data_json('white_list', white_list)
 
-    pac = pac.replace('__PROXY_ADDRESS__', proxy)
-    pac = pac.replace('__INSERT_CONTAINER__', rule)
 
-    with open('proxy.pac', 'w') as pac_file:
-        pac_file.write(pac)
+def modify_black_rule(rule, delete):
+    black_list = read_black_list()
+
+    if delete:
+        if black_list.count(rule) > 0:
+            black_list.remove(rule)
+            update_data_json('black_list', black_list)
+        else:
+            print('The address: ' + rule + ' not found.')
+    else:
+        if black_list.count(rule) > 0:
+            print('The address: ' + rule + ' already exists.')
+        else:
+            black_list.append(rule)
+            black_list.sort()
+            update_data_json('black_list', black_list)
+
+
+def generate_special_list(compression):
+    special_list = read_special_list()
+    new_list = ""
+
+    for each_line, v in special_list:
+        new_list += ("\t\t'%s': %d,\n" % (each_line, v))
+    else:
+        new_list = new_list[:-2]
+
+    if compression:
+        new_list = new_list.replace('\t', '')
+        new_list = new_list.replace('\n', '')
+        new_list = new_list.replace(' ', '')
+
+    return new_list
+
+
+def generate_white_list(compression):
+    white_list = read_white_list()
+    new_list = ""
+
+    for each_line in white_list:
+        if compression:
+            new_list += ("%s|" % each_line)
+        else:
+            new_list += ("\t\t'%s': 1,\n" % each_line)
+    else:
+        new_list = new_list[:(-1 if compression else -2)]
+
+    return new_list
+
+
+def generate_black_list(compression):
+    black_list = read_black_list()
+    new_list = ""
+
+    for each_line in black_list:
+        if compression:
+            new_list += ("%s|" % each_line)
+        else:
+            new_list += ("\t\t'%s': 1,\n" % each_line)
+    else:
+        new_list = new_list[:(-1 if compression else -2)]
+
+    return new_list
+
+
+def generate_ip_list(compression):
+    ip_list = read_bypass_list()
+    new_list = ""
+
+    for each_line, v in ip_list:
+        new_list += ("\t\t[%d, %d],\n" % (each_line, v))
+    else:
+        new_list = new_list[:-2]
+
+    if compression:
+        new_list = new_list.replace('\t', '')
+        new_list = new_list.replace('\n', '')
+        new_list = new_list.replace(' ', '')
+
+    return new_list
+
+
+def generate_pac_file(compression, path):
+    config = read_config()
+
+    pac_file = read_proxy_file(config, compression)
+    pac_file = pac_file.replace('__PROXY_ADDRESS__', config.proxy_address)
+    pac_file = pac_file.replace('__SPACIAL_LIST__', generate_special_list(compression))
+    pac_file = pac_file.replace('__BLACK_LIST__', generate_black_list(compression))
+    pac_file = pac_file.replace('__WHITE_LIST__', generate_white_list(compression))
+    pac_file = pac_file.replace('__BYPASS_IP__', generate_ip_list(compression))
+
+    if path is not None:
+        with open(path, 'w') as file:
+            file.write(pac_file)
+    else:
+        print(pac_file)
 
 
 def main():
     parser = argparse.ArgumentParser(description='A tool to quickly generate proxy auto-config files.')
 
-    parser.add_argument('-s', '--special', help='Add a site to special list.')
-    parser.add_argument('-w', '--white', help='Add a site to white list.')
-    parser.add_argument('-b', '--black', help='Add a site to black list.')
-    parser.add_argument('-u', '--update', help='Update ip list from apnic.', required=False, action='store_true')
+    parser.add_argument('-s', '--special', metavar='ADDRESS',
+                        help='Add a rule to special list.')
+    parser.add_argument('--method', metavar='METHOD', choices=('proxy', 'direct'), default='direct',
+                        help='Set special rule method.')
+    parser.add_argument('-w', '--white', metavar='ADDRESS',
+                        help='Add a rule to white list.')
+    parser.add_argument('-b', '--black', metavar='ADDRESS',
+                        help='Add a rule to black list.')
+    parser.add_argument('--delete', required=False, action='store_true',
+                        help='Delete rule action.')
+    parser.add_argument('-u', '--update', required=False, action='store_true',
+                        help='Update China ip list.')
+    parser.add_argument('-c', '--compression', required=False, action='store_true',
+                        help='Compress the pac file.')
+    parser.add_argument('-o', '--out', metavar='PATH',
+                        help='Write output to file')
 
-    args = parser.parse_args()
+    parser_args = parser.parse_args()
 
-    # Update IP list.
-    if args.update == True:
-        update_ip_list()
+    if parser_args.update:
+        update_china_list()
 
-    # Add rule to special list.
-    if args.special is not None:
-        insert_special(args.special)
+    if parser_args.special is not None:
+        modify_special_rule(parser_args.special, parser_args.method, parser_args.delete)
 
-    # Add rule to white list.
-    if args.white is not None:
-        insert_white(args.white)
+    if parser_args.white is not None:
+        modify_white_rule(parser_args.white, parser_args.delete)
 
-    # Add rule to black list.
-    if args.black is not None:
-        insert_black(args.black)
+    if parser_args.black is not None:
+        modify_black_rule(parser_args.black, parser_args.delete)
 
-    # Generate a pac file.
-    generate_pac_file()
+    generate_pac_file(parser_args.compression, parser_args.out)
 
 
 if __name__ == '__main__':
