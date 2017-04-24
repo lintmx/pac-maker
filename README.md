@@ -7,7 +7,7 @@ A Proxy Auto-config file generator.
 ```
 $ ./make.py -h
 usage: make.py [-h] [-s ADDRESS] [--method METHOD] [-w ADDRESS] [-b ADDRESS]
-               [--delete] [-u] [-c] [-o PATH]
+               [--delete] [-u] [-c] [-o PATH] [-d]
 
 A tool to quickly generate proxy auto-config files.
 
@@ -24,6 +24,8 @@ optional arguments:
   -u, --update          Update China ip list.
   -c, --compression     Compress the pac file.
   -o PATH, --out PATH   Write output to file
+  -d, --deploy          Deploy the pac file.
+
 
 ```
 
