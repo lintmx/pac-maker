@@ -172,7 +172,7 @@ def update_data_json(list_name, new_list):
         if list_name == 'black_list':
             json_data["black_list"] = new_list
 
-    with open('data.json', 'w') as data_file:
+    with open(os.path.join(sys.path[0], 'data.json'), 'w') as data_file:
         json.dump(json_data, data_file, indent=2)
 
 
@@ -188,7 +188,7 @@ def convert_dec(ipv4_address):
 def update_china_list():
     apnic_url = 'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest'
     ipv4_list = {}
-    request.urlretrieve(apnic_url, 'apnic')
+    request.urlretrieve(apnic_url, os.path.join(sys.path[0], 'apnic'))
 
     with open(os.path.join(sys.path[0], 'apnic'), 'r') as apnic_file:
         for each_line in apnic_file:
@@ -199,7 +199,7 @@ def update_china_list():
             if each_line[1] == 'CN' and each_line[2] == 'ipv4':
                 ipv4_list[convert_dec(each_line[3])] = int(each_line[4]) // 256
 
-    os.remove(os.path.join(os.getcwd(), "apnic"))
+    os.remove(os.path.join(sys.path[0], "apnic"))
 
     with open(os.path.join(sys.path[0], 'data.json'), 'r') as data_file:
         json_data = json.load(data_file)
@@ -355,7 +355,7 @@ def generate_pac_file(config, compression, path):
     pac_file = pac_file.replace('__BYPASS_IP__', generate_ip_list(compression))
 
     if path is not None:
-        with open(path, 'w') as file:
+        with open(os.path.abspath(path), 'w') as file:
             file.write(pac_file)
     else:
         print(pac_file)
