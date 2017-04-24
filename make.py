@@ -10,6 +10,7 @@ import argparse
 import json
 import operator
 import os
+import sys
 from urllib import request
 
 
@@ -20,12 +21,13 @@ class Config:
     ip_bypass = True
     local_bypass = True
     proxy_address = ''
+    deploy_config = []
 
 
 def read_special_list():
     special_list = {}
 
-    with open('data.json', 'r') as data_file:
+    with open(os.path.join(sys.path[0], 'data.json'), 'r') as data_file:
         json_data = json.load(data_file)
 
         for data in json_data["special_list"]:
@@ -39,7 +41,7 @@ def read_special_list():
 def read_white_list():
     white_list = []
 
-    with open('data.json', 'r') as data_file:
+    with open(os.path.join(sys.path[0], 'data.json'), 'r') as data_file:
         json_data = json.load(data_file)
 
         for data in json_data["white_list"]:
@@ -53,7 +55,7 @@ def read_white_list():
 def read_black_list():
     black_list = []
 
-    with open('data.json', 'r') as data_file:
+    with open(os.path.join(sys.path[0], 'data.json'), 'r') as data_file:
         json_data = json.load(data_file)
 
         for data in json_data["black_list"]:
@@ -67,7 +69,7 @@ def read_black_list():
 def read_bypass_list():
     ip_list = {}
 
-    with open('data.json', 'r') as data_file:
+    with open(os.path.join(sys.path[0], 'data.json'), 'r') as data_file:
         json_data = json.load(data_file)
 
         for data in json_data["bypass_list"]:
@@ -81,11 +83,12 @@ def read_bypass_list():
 def read_config():
     config = Config()
 
-    with open('config.json', 'r') as config_file:
+    with open(os.path.join(sys.path[0], 'config.json'), 'r') as config_file:
         json_data = json.load(config_file)
         proxy_address = ''
 
-        config.special_bypass = True if (json_data['special_list'] == 1) else False
+        config.special_bypass = True if (
+            json_data['special_list'] == 1) else False
         config.white_bypass = True if (json_data['white_list'] == 1) else False
         config.black_bypass = True if (json_data['black_list'] == 1) else False
         config.ip_bypass = True if (json_data['bypass_ip']) else False
@@ -98,6 +101,8 @@ def read_config():
         else:
             config.proxy_address = proxy_address[:-2]
 
+        config.deploy_config = json_data["deploy"]
+
     return config
 
 
@@ -108,7 +113,7 @@ def read_proxy_file(config, compression):
     else:
         template_file = 'proxy'
 
-    with open('data.json', 'r') as data_file:
+    with open(os.path.join(sys.path[0], 'data.json'), 'r') as data_file:
         json_data = json.load(data_file)
 
         if compression and (config.white_bypass or config.black_bypass):
@@ -155,7 +160,7 @@ def read_proxy_file(config, compression):
 
 
 def update_data_json(list_name, new_list):
-    with open('data.json', 'r') as data_file:
+    with open(os.path.join(sys.path[0], 'data.json'), 'r') as data_file:
         json_data = json.load(data_file)
 
         if list_name == 'ip_list':
@@ -174,7 +179,8 @@ def update_data_json(list_name, new_list):
 def convert_dec(ipv4_address):
     ip_split = ipv4_address.split('.')
 
-    convert_result = int(ip_split[0]) * 65536 + int(ip_split[1]) * 256 + int(ip_split[2]) * 1
+    convert_result = int(ip_split[0]) * 65536 + \
+        int(ip_split[1]) * 256 + int(ip_split[2]) * 1
 
     return convert_result
 
@@ -184,7 +190,7 @@ def update_china_list():
     ipv4_list = {}
     request.urlretrieve(apnic_url, 'apnic')
 
-    with open('apnic', 'r') as apnic_file:
+    with open(os.path.join(sys.path[0], 'apnic'), 'r') as apnic_file:
         for each_line in apnic_file:
             if each_line[:1] == '#' or each_line == '\n':
                 continue
@@ -195,7 +201,7 @@ def update_china_list():
 
     os.remove(os.path.join(os.getcwd(), "apnic"))
 
-    with open('data.json', 'r') as data_file:
+    with open(os.path.join(sys.path[0], 'data.json'), 'r') as data_file:
         json_data = json.load(data_file)
 
         for data in json_data["local_ip"]:
@@ -206,7 +212,8 @@ def update_china_list():
     index = 0
     while index < len(ipv4_list) - 1:
         if ipv4_list[index][0] + ipv4_list[index][1] == ipv4_list[index + 1][0]:
-            ipv4_list[index] = (ipv4_list[index][0], ipv4_list[index][1] + ipv4_list[index + 1][1])
+            ipv4_list[index] = (ipv4_list[index][0],
+                                ipv4_list[index][1] + ipv4_list[index + 1][1])
             del ipv4_list[index + 1]
             index = 0
         else:
@@ -336,14 +343,15 @@ def generate_ip_list(compression):
     return new_list
 
 
-def generate_pac_file(compression, path):
-    config = read_config()
-
+def generate_pac_file(config, compression, path):
     pac_file = read_proxy_file(config, compression)
     pac_file = pac_file.replace('__PROXY_ADDRESS__', config.proxy_address)
-    pac_file = pac_file.replace('__SPACIAL_LIST__', generate_special_list(compression))
-    pac_file = pac_file.replace('__BLACK_LIST__', generate_black_list(compression))
-    pac_file = pac_file.replace('__WHITE_LIST__', generate_white_list(compression))
+    pac_file = pac_file.replace(
+        '__SPACIAL_LIST__', generate_special_list(compression))
+    pac_file = pac_file.replace(
+        '__BLACK_LIST__', generate_black_list(compression))
+    pac_file = pac_file.replace(
+        '__WHITE_LIST__', generate_white_list(compression))
     pac_file = pac_file.replace('__BYPASS_IP__', generate_ip_list(compression))
 
     if path is not None:
@@ -353,8 +361,28 @@ def generate_pac_file(compression, path):
         print(pac_file)
 
 
+def deploy_pac_file(config):
+    for deploy_config in config.deploy_config:
+        generate_pac_file(config, deploy_config['file_compress'],
+                          os.path.join(sys.path[0], deploy_config['file_name']))
+
+        os.system("scp -P {port} {pac_file} {user}@{address}:{path}".format(port=deploy_config['server_port'],
+                                                                            pac_file=os.path.join(
+                                                                                sys.path[0], deploy_config['file_name']),
+                                                                            user=deploy_config['server_user'],
+                                                                            address=deploy_config['server_address'],
+                                                                            path=os.path.join(
+                                                                                deploy_config['server_path'],
+                                                                                deploy_config['file_name'])))
+        os.remove(os.path.join(sys.path[0], deploy_config['file_name']))
+
+
 def main():
-    parser = argparse.ArgumentParser(description='A tool to quickly generate proxy auto-config files.')
+    parser = argparse.ArgumentParser(
+        description='A tool to quickly generate proxy auto-config files.')
+
+    if len(sys.argv) <= 1:
+        sys.argv.append('-h')
 
     parser.add_argument('-s', '--special', metavar='ADDRESS',
                         help='Add a rule to special list.')
@@ -372,6 +400,8 @@ def main():
                         help='Compress the pac file.')
     parser.add_argument('-o', '--out', metavar='PATH',
                         help='Write output to file')
+    parser.add_argument('-d', '--deploy', required=False, action='store_true',
+                        help='Deploy the pac file.')
 
     parser_args = parser.parse_args()
 
@@ -379,7 +409,9 @@ def main():
         update_china_list()
 
     if parser_args.special is not None:
-        modify_special_rule(parser_args.special, parser_args.method, parser_args.delete)
+        modify_special_rule(parser_args.special,
+                            parser_args.method,
+                            parser_args.delete)
 
     if parser_args.white is not None:
         modify_white_rule(parser_args.white, parser_args.delete)
@@ -387,7 +419,11 @@ def main():
     if parser_args.black is not None:
         modify_black_rule(parser_args.black, parser_args.delete)
 
-    generate_pac_file(parser_args.compression, parser_args.out)
+    if parser_args.deploy:
+        deploy_pac_file(read_config())
+    else:
+        generate_pac_file(
+            read_config(), parser_args.compression, parser_args.out)
 
 
 if __name__ == '__main__':

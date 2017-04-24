@@ -1,13 +1,31 @@
 {
-  "special_list": 0,
-  "white_list": 0,
-  "black_list": 0,
-  "bypass_ip": 1,
-  "bypass_local": 0,
+    "special_list": 0,
+    "white_list": 0,
+    "black_list": 0,
+    "bypass_ip": 1,
+    "bypass_local": 0,
 
-  "proxy_address": {
-    "ss": ["127.0.0.1",1080,"SOCKS5"],
-    "http": ["127.0.0.1",1080,"PROXY"],
-    "remote": ["remote.abc.com",1080,"PROXY"]
-  }
+    "proxy_address": {
+        "ss": ["127.0.0.1", 1080, "SOCKS5"],
+        "http": ["127.0.0.1", 1080, "PROXY"],
+        "remote": ["remote.abc.com", 1080, "PROXY"]
+    },
+
+    "deploy": [{
+            "server_address": "server.domain.com",
+            "server_port": 1234,
+            "server_user": "user",
+            "server_path": "/path/to/",
+            "file_name": "proxy.pac",
+            "file_compress": true
+        },
+        {
+            "server_address": "server.domain.com",
+            "server_port": 1234,
+            "server_user": "user",
+            "server_path": "/path/to/",
+            "file_name": "proxy.pac",
+            "file_compress": true
+        }
+    ]
 }
